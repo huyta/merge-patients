@@ -1,0 +1,36 @@
+Validation & Merge Run (HKL = Master Source of Truth): 2026-10-15 14:42:47.422735
+
+--- [HKL] PRE-MERGE VALIDATION REPORT ---
+  Total Rows Scanned          : 1,475,754
+  Valid Unique NRICs          : 1,445,057
+  Intra-DB Duplicate NRICs    : 30,691 (preserved in extra_rows)
+  Null/Blank NRIC Rows        : 6 (preserved in extra_rows)
+  Junk NRICs ('NA','-',etc.)  : 6 (treated as blank to prevent false merges)
+  Duplicate PK Ids Found      : 0
+  Invalid NOT NULL Ints       : 0
+  Broken BirthDates (Healed)  : 0
+  Broken CreatedTS (Healed)   : 0
+  Broken UpdatedTS (Healed)   : 0
+  VARCHAR Overflows (Trimmed) : 0
+
+--- [IPR] PRE-MERGE VALIDATION REPORT ---
+  Total Rows Scanned          : 20,066
+  Valid Unique NRICs          : 20,056
+  Intra-DB Duplicate NRICs    : 9 (preserved in extra_rows)
+  Null/Blank NRIC Rows        : 1 (preserved in extra_rows)
+  Junk NRICs ('NA','-',etc.)  : 1 (treated as blank to prevent false merges)
+  Duplicate PK Ids Found      : 0
+  Invalid NOT NULL Ints       : 0
+  Broken BirthDates (Healed)  : 0
+  Broken CreatedTS (Healed)   : 0
+  Broken UpdatedTS (Healed)   : 0
+  VARCHAR Overflows (Trimmed) : 0
+
+[CROSS-DB NRIC FORMAT CHECK] NRICs differing only by dashes/spaces: 1
+  Samples (HKL vs IPR): [('354-112521287', '354112521287')]
+  hkl_only_kept_id_in_ipr               : 1,427,645
+  both_same_id_hkl_master_applied       : 15,566
+  both_diff_id_hkl_master_applied       : 1,837
+  ipr_only_kept_id_in_hkl               : 2,643
+  ipr_only_new_id_in_hkl                : 10
+  hkl_only_new_id_in_ipr                : 9

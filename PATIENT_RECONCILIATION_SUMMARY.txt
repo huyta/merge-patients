@@ -1,0 +1,282 @@
+================================================================================
+PATIENT DEMOGRAPHIC RECONCILIATION SUMMARY REPORT
+HOSPITAL KUALA LUMPUR (HKL) vs. INSTITUT PERUBATAN RESPIRATORI (IPR)
+================================================================================
+
+1. EXECUTIVE SUMMARY & RECONCILIATION MATRIX
+--------------------------------------------------------------------------------
+A cross-facility patient reconciliation analysis was conducted on patient datasets
+from Hospital Kuala Lumpur (HKL) and Institut Perubatan Respiratori (IPR).
+The objective is to identify patients that exist in only one hospital's dataset
+to support bidirectional demographic synchronization and eliminate sample rejections.
+
+MASTER RECONCILIATION METRICS:
+  * Total HKL Records Processed         : 1,475,754
+  * Total IPR Records Processed         : 20,066
+  * Combined Source Records             : 1,495,820
+
+  * Unique Valid NRICs in HKL           : 1,444,120
+  * Unique Valid NRICs in IPR           : 20,054
+  * Unique Matched NRICs (Both)         : 17,402
+  * Unique HKL-Only NRICs               : 1,426,718
+  * Unique IPR-Only NRICs               : 2,652
+
+RECORD BREAKDOWN BY CATEGORY:
+  * HKL-Only Patient Records            : 1,458,018 (written to HKL_ONLY_PATIENTS.csv)
+  * IPR-Only Patient Records            : 2,652 (written to IPR_ONLY_PATIENTS.csv)
+  * Matched HKL Patient Records         : 17,736
+  * Matched IPR Patient Records         : 17,414
+  * Total Matched Records in Output     : 35,150 (written to MATCHED_PATIENTS.csv)
+
+DATA INTEGRITY & QUALITY CHECKS:
+  * HKL Records with Missing/Blank NRIC : 14
+  * IPR Records with Missing/Blank NRIC : 0
+  * HKL Duplicate NRICs                 : 30,677 unique NRICs (62,297 records)
+  * IPR Duplicate NRICs                 : 12 unique NRICs (24 records)
+  * Ambiguous / Suspicious Records (HKL): 10,250
+  * Ambiguous / Suspicious Records (IPR): 14
+
+================================================================================
+2. SOURCE DATASET INSPECTION
+--------------------------------------------------------------------------------
+File 1: ConsumersHKL.csv
+  - Size on Disk    : 225.16 MB
+  - Total Rows      : 1,475,754 records
+  - NRIC Column     : 'Nric' (index 1)
+  - Total Columns   : 23
+  - Column Schema   : Id, Nric, HonorificId, Name, Email, MobileNo, CountryCode, BirthDate, GenderId, IsMalaysian, EthnicityId, ExternalMRN, Address, Value, IsDeleted, CreatedTimestamp, CreatedBy, UpdatedTimestamp, UpdatedBy, LastName, FirstName, nric_type, nationality
+
+File 2: ConsumersIPR.csv
+  - Size on Disk    : 3.09 MB
+  - Total Rows      : 20,066 records
+  - NRIC Column     : 'Nric' (index 1)
+  - Total Columns   : 23
+  - Column Schema   : Id, Nric, HonorificId, Name, Email, MobileNo, CountryCode, BirthDate, GenderId, IsMalaysian, EthnicityId, ExternalMRN, Address, Value, IsDeleted, CreatedTimestamp, CreatedBy, UpdatedTimestamp, UpdatedBy, LastName, FirstName, nric_type, nationality
+
+Schema Verification:
+  Both source files share identical 23-column schema originating from the LIMS
+  'Consumers' master table. All 23 original columns are preserved in all outputs.
+
+================================================================================
+3. NORMALIZATION METHODOLOGY
+--------------------------------------------------------------------------------
+To ensure accurate clinical record linkage across hospital datasets without false
+negatives or erroneous matches, the following normalization pipeline was applied:
+  1. Whitespace Trimming    : Stripped leading/trailing spaces, tabs, and carriage returns.
+  2. Quote Stripping        : Removed outer single/double quotes around fields.
+  3. Delimiter Removal      : Removed all formatting hyphens ('-') and spaces (' ').
+  4. Case Normalization     : Uppercased all alphanumeric characters (e.g., passport/old IC).
+  5. Leading Zero Retention : Strict string handling; leading zeros are preserved (e.g. '010203...').
+  6. Missing Token Filtering: Placeholder strings ('NA', 'N/A', 'NIL', 'NULL', 'UNKNOWN',
+                              '-', '--', 'TIADA', 'DUMMY') are treated strictly as missing
+                              NRIC values and excluded from matching.
+  7. Independent Matching   : Comparison is performed strictly on normalized NRIC.
+                              Patient names, DOB, or other attributes are never used to infer matches.
+
+================================================================================
+4. MATHEMATICAL RECONCILIATION & CONSISTENCY PROOFS
+--------------------------------------------------------------------------------
+A. HKL RECORD COUNT RECONCILIATION:
+   HKL Total Records              = 1,475,754
+   HKL Matched Records            = 17,736
+   HKL Only Records               = 1,458,018 (includes 14 missing NRIC records)
+   Sum (Matched + Only)           = 1,475,754
+   Variance                       = 0 (100% RECONCILED / ZERO VARIANCE)
+
+B. IPR RECORD COUNT RECONCILIATION:
+   IPR Total Records              = 20,066
+   IPR Matched Records            = 17,414
+   IPR Only Records               = 2,652
+   Sum (Matched + Only)           = 20,066
+   Variance                       = 0 (100% RECONCILED / ZERO VARIANCE)
+
+C. UNIQUE NRIC RECONCILIATION (HKL):
+   HKL Unique Valid NRICs         = 1,444,120
+   Matched Unique NRICs           = 17,402
+   HKL-Only Unique NRICs          = 1,426,718
+   Sum (Matched + HKL-Only)       = 1,444,120
+   Variance                       = 0 (100% RECONCILED / ZERO VARIANCE)
+
+D. UNIQUE NRIC RECONCILIATION (IPR):
+   IPR Unique Valid NRICs         = 20,054
+   Matched Unique NRICs           = 17,402
+   IPR-Only Unique NRICs          = 2,652
+   Sum (Matched + IPR-Only)       = 20,054
+   Variance                       = 0 (100% RECONCILED / ZERO VARIANCE)
+
+================================================================================
+5. DUPLICATE NRIC ANALYSIS
+--------------------------------------------------------------------------------
+A. IPR DUPLICATE RECORDS ANALYSIS:
+   Total Unique NRICs with Duplicates : 12
+   Total Records Involved             : 24
+   All 12 duplicate pairs in IPR were caused by inconsistent formatting during entry:
+   - 7 pairs: Trailing whitespace (e.g., '700221105891' vs '700221105891 ')
+   - 1 pair : Leading whitespace (e.g., '470813055305' vs ' 470813055305')
+   - 1 pair : Hyphen differences (e.g., '354-112886165' vs '354112886165')
+   - 2 pairs: Hyphen formatting in clinical trial IDs ('CP-CG-26-15' vs 'CPCG2615')
+   - 1 pair : Duplicate entry created seconds apart ('670518045266')
+
+   Full list of 12 duplicate NRICs in IPR:
+     * NRIC 354112886165: 2 records -> Id=4012090 ('354-112886165', Name: ''); Id=4012568 ('354112886165', Name: '')
+     * NRIC 390118055071: 2 records -> Id=60003363 ('390118055071 ', Name: ''); Id=60003424 ('390118055071', Name: '')
+     * NRIC 470813055305: 2 records -> Id=3161717 ('470813055305', Name: ''); Id=4038473 (' 470813055305', Name: '')
+     * NRIC 580612085230: 2 records -> Id=1779535 ('580612085230', Name: 'NG AH LIN'); Id=4074748 ('580612085230 ', Name: '')
+     * NRIC 620731106085: 2 records -> Id=60000454 ('620731106085', Name: ''); Id=60003246 ('620731106085 ', Name: '')
+     * NRIC 640819107371: 2 records -> Id=4083461 ('640819107371', Name: ''); Id=4085110 ('640819107371 ', Name: '')
+     * NRIC 650620105343: 2 records -> Id=4064000 ('650620105343', Name: ''); Id=4081761 ('650620105343 ', Name: '')
+     * NRIC 670518045266: 2 records -> Id=60002633 ('670518045266 ', Name: ''); Id=60002640 ('670518045266', Name: '')
+     * NRIC 700221105891: 2 records -> Id=1114793 ('700221105891', Name: 'SUNDER A/L AYAPPAN'); Id=4082869 ('700221105891 ', Name: '')
+     * NRIC 740622145129: 2 records -> Id=60002133 ('740622145129 ', Name: ''); Id=60002134 ('740622145129', Name: '')
+     * NRIC CPCG2615: 2 records -> Id=4084525 ('CPCG2615', Name: ''); Id=4089402 ('CP-CG-26-15', Name: '')
+     * NRIC CPCG2616: 2 records -> Id=4084539 ('CPCG2616', Name: ''); Id=4089404 ('CP-CG-26-16', Name: '')
+
+B. HKL DUPLICATE RECORDS ANALYSIS:
+   Total Unique NRICs with Duplicates : 30,677
+   Total Records Involved             : 62,297
+   Duplicate Distribution in HKL:
+     * NRICs appearing  2 times: 29,790 unique NRICs (59,580 records)
+     * NRICs appearing  3 times:   842 unique NRICs ( 2,526 records)
+     * NRICs appearing  4 times:    40 unique NRICs (   160 records)
+     * NRICs appearing  5 times:     1 unique NRICs (     5 records)
+     * NRICs appearing  6 times:     2 unique NRICs (    12 records)
+     * NRICs appearing  7 times:     2 unique NRICs (    14 records)
+
+   Notable HKL Duplicates:
+     * Facility / OT Workstations registered as NRICs (e.g. 'SCACC_OT' [7x], 'ED_OT' [4x])
+     * Repeated test / calibration accounts (e.g. '001128580', '001128581')
+     * Real patient NRICs re-registered under multiple local consumer IDs
+
+================================================================================
+6. AMBIGUOUS & SUSPICIOUS RECORDS REQUIRING MANUAL REVIEW
+--------------------------------------------------------------------------------
+A. MISSING / PLACEHOLDER NRIC RECORDS IN HKL (14 Records):
+   These records contain placeholder tokens instead of valid identity numbers.
+   They have been quarantined in HKL_ONLY_PATIENTS.csv and NOT matched to any patient.
+     * ConsumerId=873437   Nric='NIL IC'           Name='SHEILA LYNN JAMJANI'     Created=2020-12-24 11:16:00
+     * ConsumerId=1010201  Nric='no ic provided'   Name='ASUDRI HARIS'            Created=2020-10-17 14:59:00
+     * ConsumerId=1025042  Nric="'-NIL-"           Name='ROBERTO ROKARDO KLAU'    Created=2020-10-11 19:52:00
+     * ConsumerId=1275260  Nric='NA'               Name='ARYAN (LISAN)'           Created=2020-06-03 10:20:00
+     * ConsumerId=1834327  Nric='NIL'              Name='UNK DEPI'                Created=2022-07-23 15:11:02.452564
+     * ConsumerId=2367806  Nric="'-"               Name=''                        Created=2023-06-06 04:50:19.395572
+     * ConsumerId=2372375  Nric="'--NIL--"         Name=''                        Created=2023-06-08 06:36:00.059927
+     * ConsumerId=2379428  Nric="'--"              Name=''                        Created=2023-06-13 00:26:03.449138
+     * ConsumerId=3038325  Nric='N/A'              Name=''                        Created=2020-06-29 15:41:00
+     * ConsumerId=3061605  Nric='TIADA'            Name=''                        Created=2020-12-11 17:10:00
+     * ConsumerId=3311294  Nric='TIADA MAKLUMAT'   Name=''                        Created=2024-12-18 10:00:07.692158
+     * ConsumerId=4008464  Nric='DUMMY'            Name=''                        Created=2026-03-17 13:06:34.949306
+     * ConsumerId=4024922  Nric='DUMMY ADN'        Name=''                        Created=2026-04-20 02:05:44.171077
+     * ConsumerId=4114396  Nric='UNKNOWN'          Name=''                        Created=2026-09-30 04:44:01.574363
+
+B. TEST PATIENT ACCOUNTS REQUIRING CLEANUP:
+   The following test accounts were identified in both datasets and matched:
+     * 'TEST'    : HKL ConsumerId=1975479 <-> IPR ConsumerId=1975479 (Name: 'TEST17')
+     * 'TEST00'  : HKL ConsumerId=3238760 <-> IPR ConsumerId=3238760 (Name: 'BP HKL')
+     * 'TEST000' : HKL ConsumerId=4007486 <-> IPR ConsumerId=60001493
+     * 'TEST11'  : HKL ConsumerId=4055719 <-> IPR ConsumerId=60001440 (Name: 'BP HKL 2')
+
+C. SHORT NUMERIC / UNCONVENTIONAL IDENTIFIERS:
+   Identified short numbers (< 6 digits) present in both datasets:
+     * '1000'    : HKL ConsumerId=1487786 (Name: 'RONALD VAN LAI LIAN') <-> IPR ConsumerId=60000000 (Name: '')
+     * '007'     : HKL ConsumerId=4012719 <-> IPR ConsumerId=4012719
+     * '008'     : HKL ConsumerId=1908977 <-> IPR ConsumerId=60001494
+     * '00751'   : HKL ConsumerId=3998725 <-> IPR ConsumerId=3998725
+     * '03404'   : HKL ConsumerId=4079565 <-> IPR ConsumerId=4079565
+     * '2603'    : HKL ConsumerId=4008116 <-> IPR ConsumerId=4008116
+     * '2604'    : HKL ConsumerId=4008117 <-> IPR ConsumerId=4008117
+     * '35672'   : HKL ConsumerId=4071203 <-> IPR ConsumerId=4071203
+
+D. NAME ENTERED IN NRIC FIELD (HKL):
+     * Example: HKL ConsumerId=1252511 has Nric='HRN202872/NO IC', Name='SITA ANAK LAJANG'
+     * Example: HKL ConsumerId=1010201 has Nric='no ic provided', Name='ASUDRI HARIS'
+     * Example: HKL ConsumerId=1488011 has Nric='NIL1707', Name='NISA BT JUMADI'
+
+================================================================================
+7. GENERATED OUTPUT ARTIFACTS MANIFEST
+--------------------------------------------------------------------------------
+1. HKL_ONLY_PATIENTS.csv
+   - File Path       : /Users/matt/Downloads/Consumers/HKL_ONLY_PATIENTS.csv
+   - Record Count    : 1,458,018 records
+   - Column Count    : 23 columns (all original columns preserved)
+   - File Size       : 204.76 MB
+   - Description     : All HKL patients whose NRIC does not exist in IPR,
+                       including HKL records with missing/placeholder NRIC.
+
+2. IPR_ONLY_PATIENTS.csv
+   - File Path       : /Users/matt/Downloads/Consumers/IPR_ONLY_PATIENTS.csv
+   - Record Count    : 2,652 records
+   - Column Count    : 23 columns (all original columns preserved)
+   - File Size       : 0.35 MB
+   - Description     : All IPR patients whose NRIC does not exist in HKL.
+
+3. MATCHED_PATIENTS.csv
+   - File Path       : /Users/matt/Downloads/Consumers/MATCHED_PATIENTS.csv
+   - Record Count    : 35,150 records (17,736 HKL + 17,414 IPR)
+   - Column Count    : 23 columns (all original columns preserved)
+   - File Size       : 5.01 MB
+   - Description     : All patient records from both HKL and IPR whose NRIC
+                       exists in both datasets (17,402 unique matched NRICs).
+
+4. PATIENT_RECONCILIATION_SUMMARY.txt
+   - File Path       : /Users/matt/Downloads/Consumers/PATIENT_RECONCILIATION_SUMMARY.txt
+   - Description     : This detailed reconciliation audit summary report.
+
+================================================================================
+8. RECOMMENDATIONS FOR HKL & IPR CLINICAL & IT TEAMS
+--------------------------------------------------------------------------------
+1. PRIORITIZE IPR-ONLY PATIENTS FOR SYNCHRONIZATION:
+   The 2,652 patients existing only at IPR represent the primary target for initial
+   inbound backfill into HKL, as IPR frequently dispatches respiratory lab specimens
+   to HKL for specialized pathology analysis.
+
+2. CLEAN UP TEST ACCOUNTS PRIOR TO AUTOMATED SYNC GO-LIVE:
+   Accounts with NRICs 'TEST', 'TEST00', 'TEST000', 'TEST11', '007', '008', '1000'
+   should be marked IsDeleted=1 in both local databases before enabling bidirectional sync
+   to avoid propagating non-clinical test data.
+
+3. RESOLVE DUPLICATE ENTRIES AT IPR:
+   The 12 duplicate NRIC instances at IPR should be consolidated. The active record with
+   complete demographic details (Name, DOB) should be retained, and the blank duplicate
+   marked IsDeleted=1.
+
+4. DATABASE INPUT NORMALIZATION TRIGGER:
+   Implement an application-level or database-level trigger at patient registration to strip
+   hyphens and leading/trailing whitespace automatically, preventing future duplicate entries.
+================================================================================
+
+================================================================================
+9. CONSUMER ID COMPARISON MATRIX (SAME NRIC & SAME ID vs. SAME NRIC & DIFF ID)
+--------------------------------------------------------------------------------
+Among the 17,402 unique matched NRICs between HKL and IPR, the relationship 
+between local database primary keys (Consumer Id) was analyzed across all 17,756 
+record pairings:
+
+1. SUMMARY BREAKDOWN:
+   * Total Record Pairings Analyzed     : 17,756 pairings
+   * Same NRIC & SAME Consumer ID       : 15,573 pairs (15,565 unique NRICs)
+   * Same NRIC & DIFFERENT Consumer ID  :  2,183 pairs ( 2,106 unique NRICs)
+   * Overlap (NRICs with both Same & Diff ID due to HKL duplicates): 269 NRICs
+
+2. DATA QUALITY & CLINICAL SIGNIFICANCE:
+   A. SAME ID GROUP (15,573 pairs):
+      - Represents master records originally seeded/migrated from HKL to IPR.
+      - High demographic consistency:
+        * Name exact match: 15,571 / 15,573 (99.99%)
+        * BirthDate match : 15,566 / 15,573 (99.95%)
+        * Gender match    : 15,570 / 15,573 (99.98%)
+
+   B. DIFFERENT ID GROUP (2,183 pairs):
+      - Represents independent local registrations at HKL and IPR for the same person.
+      - Discrepancy breakdown:
+        * ID Only Mismatch (Demographics Match) : 1,352 pairs (61.9%)
+        * Name Mismatch                         :   672 pairs (30.8%)
+        * DOB Mismatch                          :    58 pairs ( 2.7%)
+        * Gender Mismatch                       :    43 pairs ( 2.0%)
+        * Combined Name + DOB Mismatch          :    33 pairs ( 1.5%)
+        * Combined Name + Gender Mismatch       :    14 pairs ( 0.6%)
+        * Combined DOB + Gender Mismatch        :    11 pairs ( 0.5%)
+
+3. NEW OUTPUT ARTIFACTS GENERATED:
+   * CONSUMERS_SAME_NRIC_SAME_ID.csv: 15,573 records (3.18 MB)
+   * CONSUMERS_SAME_NRIC_DIFF_ID.csv:  2,183 records (0.53 MB)
+================================================================================

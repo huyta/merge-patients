@@ -1,0 +1,123 @@
+================================================================================
+FINAL HOSPITAL PATIENT SYNCHRONIZATION DATASET GENERATION REPORT
+Hospital Kuala Lumpur (HKL) & Institut Perubatan Respiratori (IPR)
+Generated: 2026-10-13 23:11:50   Data directory: /Users/matt/Downloads/Consumers
+================================================================================
+OVERALL VALIDATION: PASSED
+
+1. RECORD COUNTS
+--------------------------------------------------------------------------------
+  File                       Records    Unique IDs   IsDeleted=1  Missing NRIC
+  ConsumersHKL.csv         1,475,754     1,475,754         4,476            14
+  ConsumersIPR.csv            20,066        20,066            16             0
+  Final_HKL.csv            1,478,401     1,478,401         4,476
+  Final_IPR.csv            1,445,046     1,445,046            16
+  Final_HKL = 1,475,754 original HKL + 2,647 copied from IPR
+  Final_IPR = 20,066 original IPR + 1,424,980 copied from HKL
+  Unique valid NRICs: HKL 1,444,120 (30,677 with >1 record) | IPR 20,054 (12 with >1 record)
+
+2. PATIENT MATCHING SUMMARY
+--------------------------------------------------------------------------------
+  * NRICs found in both hospitals              : 17,402 (HKL records 17,736, IPR records 17,414)
+    - Same NRIC and same ID(s)      (Rule 1)    : 15,304 NRICs
+    - Same NRIC, different ID(s)    (Rule 4)    : 1,837 NRICs
+    - Mixed (some IDs match, some differ)       : 261 NRICs
+    - Record pairs with same ID / different ID  : 15,573 / 2,183
+  * NRICs found only in HKL                    : 1,426,718 (1,458,004 records)
+    - with an active record (copied to IPR)     : 1,424,980
+    - with only deleted records (not copied)    : 1,738
+  * NRICs found only in IPR                    : 2,652 (2,652 records)
+    - with an active record (copied to HKL)     : 2,647
+    - with only deleted records (not copied)    : 5
+
+3. COPIED RECORDS WITH CHANGED IDs ('111' PREFIX)
+--------------------------------------------------------------------------------
+  Destination Final_HKL.csv: 10 record(s)
+    Original ID   New ID             Prefixes  NRIC
+    3846458       1113846458                1  U23982025IPR
+    4057601       1114057601                1  170423101623
+    4064060       1114064060                1  651214045060
+    4066562       1114066562                1  DLP00011
+    4069480       1114069480                1  740425105339
+    4070560       1114070560                1  861010435898
+    4072918       1114072918                1  060331080469
+    4078105       1114078105                1  620303085206
+    4078939       1114078939                1  810314105628
+    4088751       1114088751                1  AD9670745
+  Destination Final_IPR.csv: 9 record(s)
+    Original ID   New ID             Prefixes  NRIC
+    4057601       1114057601                1  170623101623
+    4064060       1114064060                1  651214045062
+    4066562       1114066562                1  DLP000011
+    4069480       1114069480                1  740425125339
+    4070560       1114070560                1  861010045898
+    4072918       1114072918                1  060331081469
+    4078105       1114078105                1  520303085200
+    4078939       1114078939                1  810314105626
+    4088751       1114088751                1  A09670745
+
+4. SKIPPED RECORDS (NOT COPIED)
+--------------------------------------------------------------------------------
+  IPR -> Final_HKL (20,066 records evaluated)
+    - Copied                                         : 2,647
+    - Skipped: NRIC already exists in HKL dataset     : 17,403
+    - Skipped: NRIC already copied (duplicate IPR record): 0
+    - Skipped: IsDeleted = 1                         : 16
+    - Skipped: missing/placeholder NRIC              : 0
+  HKL -> Final_IPR (1,475,754 records evaluated)
+    - Copied                                         : 1,424,980
+    - Skipped: NRIC already exists in IPR dataset     : 17,673
+    - Skipped: NRIC already copied (duplicate HKL record): 28,611
+    - Skipped: IsDeleted = 1                         : 4,476
+    - Skipped: missing/placeholder NRIC              : 14
+
+5. DELETED RECORDS (IsDeleted = 1)
+--------------------------------------------------------------------------------
+  * HKL: 4,476 in source | 4,476 retained in Final_HKL | 4,476 excluded from Final_IPR
+  * IPR: 16 in source | 16 retained in Final_IPR | 16 excluded from Final_HKL
+
+6. VALIDATION CHECKS
+--------------------------------------------------------------------------------
+  [PASS] HKL -> IPR: every HKL deleted record excluded from copying -- 4,476 of 4,476
+  [PASS] IPR -> HKL: every IPR deleted record excluded from copying -- 16 of 16
+  [PASS] IPR -> HKL: every source record accounted for -- 20,066 accounted / 20,066 records
+  [PASS] HKL -> IPR: every source record accounted for -- 1,475,754 accounted / 1,475,754 records
+  [PASS] Final_HKL.csv: header identical to source
+  [PASS] Final_HKL.csv: all 1,475,754 original records present and unchanged -- 1,475,754 present, 0 changed
+  [PASS] Final_HKL.csv: copied record count = source-only active patients -- written 2,647, synced 2,647, expected 2,647
+  [PASS] Final_HKL.csv: copied records identical to source except Id -- 0 mismatched, 0 not found
+  [PASS] Final_HKL.csv: no copied record has IsDeleted = 1 -- 0 found
+  [PASS] Final_HKL.csv: deleted records = original destination deleted records -- 4,476 vs 4,476
+  [PASS] Final_HKL.csv: no copied record duplicates an NRIC already in the file -- 0 existed in destination, 0 duplicated among copies
+  [PASS] Final_HKL.csv: no duplicate IDs introduced -- 1,478,401 unique IDs in 1,478,401 records
+  [PASS] Final_HKL.csv: changed IDs follow the repeated '111' prefix rule -- 10 changed, 0 invalid
+  [PASS] Final_IPR.csv: header identical to source
+  [PASS] Final_IPR.csv: all 20,066 original records present and unchanged -- 20,066 present, 0 changed
+  [PASS] Final_IPR.csv: copied record count = source-only active patients -- written 1,424,980, synced 1,424,980, expected 1,424,980
+  [PASS] Final_IPR.csv: copied records identical to source except Id -- 0 mismatched, 0 not found
+  [PASS] Final_IPR.csv: no copied record has IsDeleted = 1 -- 0 found
+  [PASS] Final_IPR.csv: deleted records = original destination deleted records -- 16 vs 16
+  [PASS] Final_IPR.csv: no copied record duplicates an NRIC already in the file -- 0 existed in destination, 0 duplicated among copies
+  [PASS] Final_IPR.csv: no duplicate IDs introduced -- 1,445,046 unique IDs in 1,445,046 records
+  [PASS] Final_IPR.csv: changed IDs follow the repeated '111' prefix rule -- 9 changed, 0 invalid
+
+7. RULE CONFIRMATION (derived from the checks above)
+--------------------------------------------------------------------------------
+  Rule 1: CONFIRMED (6 checks) - Same NRIC & same ID: each hospital keeps its own original record
+  Rule 2: CONFIRMED (10 checks) - HKL-only NRIC: kept in HKL; active records copied to IPR ('111' prefix on ID conflict)
+  Rule 3: CONFIRMED (10 checks) - IPR-only NRIC: kept in IPR; active records copied to HKL ('111' prefix on ID conflict)
+  Rule 4: CONFIRMED (6 checks) - Same NRIC & different IDs: each hospital keeps its own original ID
+  Rule 5: CONFIRMED (10 checks) - IsDeleted = 1: kept at origin, never copied
+
+8. ITEMS FOR MANUAL REVIEW (details in REVIEW_ITEMS.csv)
+--------------------------------------------------------------------------------
+        10  SAME_ID_DIFFERENT_NRIC                 Same ID in both hospitals, different NRIC (possible typo)
+        11  DESTINATION_HAS_ONLY_DELETED_RECORDS   Active patient whose only records in the other hospital are deleted
+    28,611  DUPLICATE_PATIENT_RECORD_IN_SOURCE     Extra active record of a patient already copied (not copied)
+        14  MISSING_OR_PLACEHOLDER_NRIC            Blank/placeholder NRIC (kept at origin, not copied)
+        24  SUSPICIOUS_NRIC_MATCHED                Placeholder-like NRIC matched across hospitals (records)
+     1,044  SUSPICIOUS_NRIC_COPIED                 Placeholder-like NRIC copied to the other hospital
+    29,714  TOTAL
+  (Same-ID/different-NRIC pairs: 10; matched placeholder-like NRICs: 12; patients active in HKL but deleted-only in IPR: 11; active in IPR but deleted-only in HKL: 0)
+
+Execution completed in 27.93 seconds.
