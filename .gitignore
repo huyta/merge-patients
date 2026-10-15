@@ -1,6 +1,7 @@
 # Ignore all CSV data files
 *.csv
 **/*.csv
+*.bak*
 
 # Python cache & build artifacts
 __pycache__/
